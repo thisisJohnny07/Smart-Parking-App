@@ -3,10 +3,13 @@ import { FaCar } from 'react-icons/fa'
 import FormInput from '../../components/formInput'
 import PrimaryButton from '../../components/primaryButton'
 import { useNavigate } from 'react-router-dom'
+import useAuth from '../../hooks/useAuth'
 
 const SignIn = () => {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState({ email: '', password: '' })
+  const { login } = useAuth()
+
+  const [formData, setFormData] = useState({ username: '', password: '' })
   const [error, setError] = useState('')
 
   const handleChange = (e) => {
@@ -15,24 +18,33 @@ const SignIn = () => {
     if (error) setError('')
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const { email, password } = formData
+const handleSubmit = async (e) => {
+  e.preventDefault()
+  const { username, password } = formData
 
-    if (!email.trim() || !password.trim()) {
-      setError('Please enter both email and password.')
+  if (!username.trim() || !password.trim()) {
+    setError('Please enter both username and password.')
+    return
+  }
+
+  try {
+    const userData = await login(username, password)
+
+    if (!userData?.is_superuser) {
+      setError('Access denied: Only admin can access this page.')
       return
     }
 
-    // TODO: Add real authentication logic here
-
-    navigate('/admin/sidebar', { state: { email } })
+    navigate('/admin/home', { state: { username } })
+  } catch (err) {
+    setError('Invalid credentials or server error.')
   }
+}
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-sm bg-white p-6 rounded-xl shadow-md">
-        {/* Logo */}
         <div className="flex items-center justify-center mb-6">
           <FaCar className="text-gray-900 text-2xl mr-2" />
           <h1 className="text-xl font-bold uppercase text-gray-900">SmartSpot</h1>
@@ -42,12 +54,12 @@ const SignIn = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <FormInput
-            id="email"
-            name="email"
-            type="email"
-            label="Email"
-            placeholder="admin@example.com"
-            value={formData.email}
+            id="username"
+            name="username"
+            type="text"
+            label="Username"
+            placeholder="admin"
+            value={formData.username}
             onChange={handleChange}
           />
           <FormInput

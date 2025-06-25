@@ -1,306 +1,138 @@
-import React, { useState } from 'react'
-
-const sampleLocations = [
-  {
-    id: 1,
-    name: 'Main Parking Lot',
-    address: '123 Main Street',
-    slots: {
-      standard: {
-        count: 12,
-        rate: 40,
-        type: 'Open Space',
-        description: 'Ideal for sedans and hatchbacks.',
-      },
-      covered: {
-        count: 6,
-        rate: 50,
-        type: 'Covered',
-        description: 'Covered slots for protection from sun and rain.',
-      },
-      premium: {
-        count: 3,
-        rate: 70,
-        type: 'Premium',
-        description: 'Closest to entrance, shaded and secure.',
-      },
-    },
-  },
-  {
-    id: 2,
-    name: 'Annex Parking',
-    address: '456 Side Road',
-    slots: {
-      standard: {
-        count: 10,
-        rate: 35,
-        type: 'Open Space',
-        description: 'Best for compact cars and motorcycles.',
-      },
-      covered: {
-        count: 4,
-        rate: 45,
-        type: 'Covered',
-        description: 'Secure and shaded slots.',
-      },
-      premium: {
-        count: 2,
-        rate: 65,
-        type: 'Premium',
-        description: 'Convenient and safe.',
-      },
-    },
-  },
-]
+import React, { useEffect, useState } from 'react'
+import { getLocations, deleteLocation  } from '../../services/locationService'
+import { useNavigate } from 'react-router-dom'
 
 const ManageParking = () => {
-  const [locations, setLocations] = useState(sampleLocations)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingId, setEditingId] = useState(null)
+  const [locations, setLocations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
-  const [form, setForm] = useState({
-    name: '',
-    address: '',
-    slots: {
-      standard: { count: '', rate: '', type: '', description: '' },
-      covered: { count: '', rate: '', type: '', description: '' },
-      premium: { count: '', rate: '', type: '', description: '' },
-    },
-  })
-
-  const resetForm = () => {
-    setForm({
-      name: '',
-      address: '',
-      slots: {
-        standard: { count: '', rate: '', type: '', description: '' },
-        covered: { count: '', rate: '', type: '', description: '' },
-        premium: { count: '', rate: '', type: '', description: '' },
-      },
-    })
-    setEditingId(null)
-    setIsModalOpen(false)
-  }
-
-  const handleChange = (e, type) => {
-    const { name, value } = e.target
-    if (type) {
-      setForm((prev) => ({
-        ...prev,
-        slots: {
-          ...prev.slots,
-          [type]: { ...prev.slots[type], [name]: value },
-        },
-      }))
-    } else {
-      setForm((prev) => ({ ...prev, [name]: value }))
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const data = await getLocations()
+        setLocations(data)
+      } catch (err) {
+        console.error(err)
+        setError('Failed to load locations.')
+      } finally {
+        setLoading(false)
+      }
     }
+    fetchLocations()
+  }, [])
+
+  const handleAddLocation = () => navigate('/manage-parking/add')
+  const handleEditLocation = (id) => navigate(`/manage-parking/edit/${id}`)
+  const handleDeleteLocation = async (id) => {
+  const confirm = window.confirm('Are you sure you want to delete this location?')
+  if (!confirm) return
+
+  try {
+    await deleteLocation(id)
+    setLocations((prev) => prev.filter((loc) => loc.id !== id))
+  } catch (error) {
+    console.error('Failed to delete location:', error)
+    alert('Failed to delete the location. Please try again.')
   }
+}
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const newLoc = {
-      id: editingId || Date.now(),
-      ...form,
-      slots: {
-        standard: {
-          ...form.slots.standard,
-          count: Number(form.slots.standard.count),
-          rate: Number(form.slots.standard.rate),
-        },
-        covered: {
-          ...form.slots.covered,
-          count: Number(form.slots.covered.count),
-          rate: Number(form.slots.covered.rate),
-        },
-        premium: {
-          ...form.slots.premium,
-          count: Number(form.slots.premium.count),
-          rate: Number(form.slots.premium.rate),
-        },
-      },
-    }
-
-    if (editingId) {
-      setLocations((prev) => prev.map((l) => (l.id === editingId ? newLoc : l)))
-    } else {
-      setLocations((prev) => [...prev, newLoc])
-    }
-    resetForm()
-  }
-
-  const handleEdit = (loc) => {
-    setForm(loc)
-    setEditingId(loc.id)
-    setIsModalOpen(true)
-  }
-
-  const handleDelete = (id) => {
-    if (window.confirm('Delete this parking location?')) {
-      setLocations((prev) => prev.filter((l) => l.id !== id))
-    }
+  // Group slot pricings by vehicle type
+  const groupByVehicleType = (slotPricings) => {
+    return slotPricings.reduce((acc, slot) => {
+      if (!acc[slot.vehicle_type]) acc[slot.vehicle_type] = []
+      acc[slot.vehicle_type].push(slot)
+      return acc
+    }, {})
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-extralight text-gray-900">Manage Parking</h1>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <header className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Manage Parking</h1>
         <button
-          onClick={() => setIsModalOpen(true)}
-          className="text-blue-600 hover:text-blue-800 font-medium"
+          onClick={handleAddLocation}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
         >
           + Add Location
         </button>
-      </div>
+      </header>
 
-      <div className="space-y-6 max-w-4xl mx-auto">
-        {locations.map((loc) => (
-          <div
-            key={loc.id}
-            className="bg-white rounded-md shadow-sm p-6 border border-gray-200"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800">{loc.name}</h2>
-                <p className="text-sm text-gray-500">{loc.address}</p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleEdit(loc)}
-                  className="text-yellow-600 hover:text-yellow-800"
-                  aria-label="Edit location"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(loc.id)}
-                  className="text-red-600 hover:text-red-800"
-                  aria-label="Delete location"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
+      {loading ? (
+        <div className="text-center text-gray-600">Loading locations…</div>
+      ) : error ? (
+        <div className="text-center text-red-600">{error}</div>
+      ) : locations.length === 0 ? (
+        <div className="text-center text-gray-500">No parking locations found.</div>
+      ) : (
+        <div className="bg-white rounded shadow overflow-x-auto w-full">
+          {locations.map((loc) => {
+            const grouped = groupByVehicleType(loc.slot_pricings)
 
-            <div className="divide-y divide-gray-200">
-              {Object.entries(loc.slots).map(([key, s]) => (
-                <div key={key} className="py-3 flex flex-col gap-1">
-                  <span className="uppercase tracking-wider font-semibold text-gray-600">
-                    {key} slot
-                  </span>
-                  <p className="text-gray-700">
-                    <strong>Count:</strong> {s.count} &nbsp;&nbsp;
-                    <strong>Rate:</strong> ₱{s.rate}/hr
-                  </p>
-                  <p className="text-gray-700">
-                    <strong>Type:</strong> {s.type}
-                  </p>
-                  <p className="text-gray-600 italic text-sm">{s.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-6 py-12 bg-white/30 backdrop-blur-sm"
-          onClick={resetForm}
-        >
-          <div
-            className="relative bg-white rounded-md shadow-lg max-w-lg w-full p-8"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-light text-gray-900">
-                {editingId ? 'Edit' : 'Add'} Parking
-              </h2>
-              <button
-                onClick={resetForm}
-                className="text-gray-500 hover:text-gray-900 text-3xl leading-none"
-              >
-                &times;
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5 text-gray-800">
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="Location Name"
-                className="w-full border-b border-gray-300 focus:outline-none focus:border-blue-600 py-2"
-                required
-              />
-              <input
-                name="address"
-                value={form.address}
-                onChange={handleChange}
-                placeholder="Address"
-                className="w-full border-b border-gray-300 focus:outline-none focus:border-blue-600 py-2"
-                required
-              />
-
-              {['standard', 'covered', 'premium'].map((type) => (
-                <fieldset key={type} className="pt-4 border-t border-gray-200">
-                  <legend className="text-gray-600 font-medium uppercase tracking-wide mb-2">
-                    {type} Slot
-                  </legend>
-                  <div className="space-y-3">
-                    <input
-                      name="count"
-                      type="number"
-                      placeholder="Slot Count"
-                      value={form.slots[type].count}
-                      onChange={(e) => handleChange(e, type)}
-                      className="w-full border-b border-gray-300 focus:outline-none focus:border-blue-600 py-2"
-                      required
-                    />
-                    <input
-                      name="rate"
-                      type="number"
-                      placeholder="Rate per hour"
-                      value={form.slots[type].rate}
-                      onChange={(e) => handleChange(e, type)}
-                      className="w-full border-b border-gray-300 focus:outline-none focus:border-blue-600 py-2"
-                      required
-                    />
-                    <input
-                      name="type"
-                      placeholder="Slot Type"
-                      value={form.slots[type].type}
-                      onChange={(e) => handleChange(e, type)}
-                      className="w-full border-b border-gray-300 focus:outline-none focus:border-blue-600 py-2"
-                    />
-                    <input
-                      name="description"
-                      placeholder="Description"
-                      value={form.slots[type].description}
-                      onChange={(e) => handleChange(e, type)}
-                      className="w-full border-b border-gray-300 focus:outline-none focus:border-blue-600 py-2"
-                    />
+            return (
+              <div key={loc.id} className="mb-8 border-b last:border-b-0 border-gray-200">
+                <div className="flex justify-between items-center py-4 px-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800">{loc.name}</h2>
+                    <p className="text-sm text-gray-500">{loc.address}</p>
                   </div>
-                </fieldset>
-              ))}
+                  <div className="flex gap-4 text-sm">
+                    <button
+                      onClick={() => handleEditLocation(loc.id)}
+                      className="text-gray-600 hover:text-gray-900 transition-colors"
+                      aria-label={`Edit ${loc.name}`}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteLocation(loc.id)}
+                      className="text-red-600 hover:text-red-800 transition-colors"
+                      aria-label={`Delete ${loc.name}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
 
-              <div className="flex justify-end gap-4 pt-4">
-                <button
-                  type="submit"
-                  className="text-white bg-blue-600 px-5 py-2 rounded hover:bg-blue-700 transition"
-                >
-                  {editingId ? 'Update' : 'Add'}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="text-gray-600 px-5 py-2 rounded hover:bg-gray-100 transition"
-                >
-                  Cancel
-                </button>
+                {/* Slot pricings table */}
+                <table className="w-full border-t border-gray-200 text-sm text-left">
+                  <thead className="bg-gray-50 border-b border-gray-300">
+                    <tr>
+                      <th className="px-6 py-3 font-semibold text-gray-700">Vehicle Type</th>
+                      <th className="px-6 py-3 font-semibold text-gray-700">Slot Type</th>
+                      <th className="px-6 py-3 font-semibold text-gray-700">Rate (₱/hr)</th>
+                      <th className="px-6 py-3 font-semibold text-gray-700">Available Slots</th>
+                      <th className="px-6 py-3 font-semibold text-gray-700">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(grouped).map(([vehicle, slots]) =>
+                      slots.map((slot, idx) => (
+                        <tr
+                          key={slot.slot_type + idx}
+                          className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                        >
+                          {idx === 0 && (
+                            <td
+                              rowSpan={slots.length}
+                              className="px-6 py-3 align-top font-medium text-gray-900"
+                            >
+                              {vehicle}
+                            </td>
+                          )}
+                          <td className="px-6 py-3">{slot.slot_type}</td>
+                          <td className="px-6 py-3">₱{slot.rate_per_hour}</td>
+                          <td className="px-6 py-3">{slot.available_slots}</td>
+                          <td className="px-6 py-3 text-gray-600 italic">{slot.slot_description}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </form>
-          </div>
+            )
+          })}
         </div>
       )}
     </div>

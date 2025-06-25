@@ -1,11 +1,5 @@
 import React from 'react'
 
-const pricingOptions = [
-  { id: 1, label: 'Standard Slot', price: 40, type: 'Open Space', notes: 'Ideal for sedans and hatchbacks.' },
-  { id: 2, label: 'Covered Slot', price: 60, type: 'Covered', notes: 'Best for rainy weather and sun protection.' },
-  { id: 3, label: 'Premium Slot', price: 80, type: 'Near Entrance', notes: 'Closest to exits and facilities.' },
-]
-
 const InfoRow = ({ label, value }) => (
   <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white px-4 py-3 border rounded-md shadow-sm">
     <span className="font-medium text-gray-700">{label}</span>
@@ -18,10 +12,12 @@ const StepReview = ({
   vehicleType,
   date,
   time,
-  selectedSlotId,
+  selectedSlot,
   vehicleInfo,
 }) => {
-  const selectedSlot = pricingOptions.find(slot => slot.id === selectedSlotId)
+  const totalCost = selectedSlot && vehicleInfo.hours
+    ? selectedSlot.price * vehicleInfo.hours
+    : 0
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md border border-gray-200">
@@ -56,15 +52,23 @@ const StepReview = ({
       </div>
 
       {/* Vehicle Info */}
-      <div>
+      <div className="mb-8">
         <h3 className="text-xl font-semibold text-gray-800 mb-4">Vehicle Information</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InfoRow label="Plate Number:" value={vehicleInfo.plateNumber || 'N/A'} />
           <InfoRow label="Make:" value={vehicleInfo.vehicleMake || 'N/A'} />
           <InfoRow label="Model:" value={vehicleInfo.vehicleModel || 'N/A'} />
           <InfoRow label="Color:" value={vehicleInfo.color || 'N/A'} />
+          <InfoRow label="Hours:" value={vehicleInfo.hours || 'N/A'} />
         </div>
       </div>
+
+      {/* Total Cost */}
+      {selectedSlot && vehicleInfo.hours && (
+        <div className="text-right mt-6 text-xl font-bold text-gray-900">
+          Total Cost: ₱{totalCost}
+        </div>
+      )}
     </div>
   )
 }

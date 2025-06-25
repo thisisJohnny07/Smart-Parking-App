@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import TopBar from '../../layouts/topbar'
 import Navbar from '../../layouts/navbar'
 import Footer from '../../layouts/footer'
@@ -13,23 +13,39 @@ import StepPayment from '../../components/bookingSteps/stepPayment'
 const BookParking = () => {
   const locationHook = useLocation()
   const passedState = locationHook.state || {}
+  const navigate = useNavigate()
 
-  // Force start at Step 2
+  useEffect(() => {
+    if (
+      !passedState ||
+      !passedState.locationId ||
+      !passedState.locationLabel ||
+      !passedState.vehicleTypeId ||
+      !passedState.vehicleTypeLabel ||
+      !passedState.date ||
+      !passedState.time
+    ) {
+      navigate('/')
+    }
+  }, [passedState, navigate])
+
   const [currentStep, setCurrentStep] = useState(2)
 
-  // Booking form values passed from Header
-  const [location] = useState(passedState.location || '')
-  const [vehicleType] = useState(passedState.vehicleType || '')
+  const [locationId] = useState(passedState.locationId || '')
+  const [locationLabel] = useState(passedState.locationLabel || '')
+  const [vehicleTypeId] = useState(passedState.vehicleTypeId || '')
+  const [vehicleTypeLabel] = useState(passedState.vehicleTypeLabel || '')
   const [date] = useState(passedState.date || '')
   const [time] = useState(passedState.time || '')
 
-  const [selectedSlotId, setSelectedSlotId] = useState(null)
+  const [selectedSlot, setSelectedSlot] = useState(null)
 
   const [vehicleInfo, setVehicleInfo] = useState({
     plateNumber: '',
     vehicleMake: '',
     vehicleModel: '',
     color: '',
+    hours: 1
   })
 
   const nextStep = () => {
@@ -41,12 +57,13 @@ const BookParking = () => {
   }
 
   const isNextDisabled = () => {
-    if (currentStep === 2) return selectedSlotId === null
+    if (currentStep === 2) return selectedSlot === null
     if (currentStep === 3) {
       return !vehicleInfo.plateNumber ||
         !vehicleInfo.vehicleMake ||
         !vehicleInfo.vehicleModel ||
-        !vehicleInfo.color
+        !vehicleInfo.color ||
+        !vehicleInfo.hours
     }
     return false
   }
@@ -54,22 +71,41 @@ const BookParking = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 2:
-        return <StepSlot selectedId={selectedSlotId} setSelectedId={setSelectedSlotId} />
+        return (
+          <StepSlot 
+            selectedSlot={selectedSlot}
+            setSelectedSlot={setSelectedSlot}
+            locationId={locationId}
+            vehicleTypeId={vehicleTypeId}
+            date={date}
+            time={time}
+          />
+        )
       case 3:
         return <StepVehicle vehicleInfo={vehicleInfo} setVehicleInfo={setVehicleInfo} />
       case 4:
         return (
           <StepReview
-            location={location}
-            vehicleType={vehicleType}
+            location={locationLabel}
+            vehicleType={vehicleTypeLabel}
             date={date}
             time={time}
-            selectedSlotId={selectedSlotId}
+            selectedSlot={selectedSlot}
             vehicleInfo={vehicleInfo}
           />
         )
       case 5:
-        return <StepPayment />
+        return (
+          <StepPayment
+            locationId={locationId}
+            vehicleTypeId={vehicleTypeId}
+            selectedSlot={selectedSlot}
+            date={date}
+            time={time}
+            vehicleInfo={vehicleInfo}
+            totalAmount={vehicleInfo.hours * selectedSlot?.price || 0}
+          />
+        )
       default:
         return null
     }

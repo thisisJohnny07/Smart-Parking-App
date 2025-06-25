@@ -1,26 +1,60 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import bgImage from '../assets/bg.jpg'
 import { useNavigate } from 'react-router-dom'
+import { fetchLocationsAndVehicles } from '../services/locationService'
+import useAuth from '../hooks/useAuth' // Add this
 
 const Header = () => {
-  const [vehicleType, setVehicleType] = useState('')
-  const [location, setLocation] = useState('')
+  const [vehicleType, setVehicleType] = useState(null)
+  const [location, setLocation] = useState(null)
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
+  const [locations, setLocations] = useState([])
+  const [vehicleTypes, setVehicleTypes] = useState([])
+  const { user } = useAuth()
 
   const navigate = useNavigate()
 
-  const availableLocations = [
-    'NHA Buhangin',
-    'Davao City Hall',
-    'SM Lanang Parking',
-    'Abreeza Mall Lot A',
-  ]
+  useEffect(() => {
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
+    setDate(today)
+
+    fetchLocationsAndVehicles().then((res) => {
+      setLocations(res.locations || [])
+      setVehicleTypes(res.vehicle_types || [])
+    })
+  }, [])
+
+  const now = new Date()
+  const todayDate = now.toISOString().split('T')[0]
+  const currentTime = now.toTimeString().slice(0, 5)
+  const isToday = date === todayDate
+
+  useEffect(() => {
+    if (isToday && time && time <= currentTime) {
+      setTime('')
+    }
+  }, [date])
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    // Make sure only regular users can book
+    if (!user || user.is_superuser) {
+      navigate('/sign-in')
+      return
+    }
+
     navigate('/book-parking', {
-      state: { location, vehicleType, date, time }
+      state: {
+        locationId: location.id,
+        locationLabel: location.label,
+        vehicleTypeId: vehicleType.id,
+        vehicleTypeLabel: vehicleType.label,
+        date,
+        time
+      }
     })
   }
 
@@ -36,7 +70,9 @@ const Header = () => {
 
       <div className="relative z-20 py-16 px-6 max-w-5xl mx-auto text-center">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Book a Parking Spot</h1>
-        <p className="text-lg mb-10 text-gray-200">Reserve your space ahead of time and avoid the hassle.</p>
+        <p className="text-lg mb-10 text-gray-200">
+          Reserve your space ahead of time and avoid the hassle.
+        </p>
 
         <form
           onSubmit={handleSubmit}
@@ -47,14 +83,18 @@ const Header = () => {
             <div className="text-left">
               <label className="block mb-2 text-sm font-semibold">Select Location</label>
               <select
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                value={location?.id || ''}
+                onChange={(e) => {
+                  const id = parseInt(e.target.value)
+                  const selected = locations.find(l => l.id === id)
+                  setLocation({ id, label: selected.address })
+                }}
                 required
                 className="w-full px-4 py-2 rounded bg-white/80 text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="" disabled>Select location</option>
-                {availableLocations.map((loc, idx) => (
-                  <option key={idx} value={loc}>{loc}</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>{loc.address}</option>
                 ))}
               </select>
             </div>
@@ -63,15 +103,19 @@ const Header = () => {
             <div className="text-left">
               <label className="block mb-2 text-sm font-semibold">Vehicle Type</label>
               <select
-                value={vehicleType}
-                onChange={(e) => setVehicleType(e.target.value)}
+                value={vehicleType?.id || ''}
+                onChange={(e) => {
+                  const id = parseInt(e.target.value)
+                  const selected = vehicleTypes.find(v => v.id === id)
+                  setVehicleType({ id, label: selected.name })
+                }}
                 required
                 className="w-full px-4 py-2 rounded bg-white/80 text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
               >
                 <option value="" disabled>Select vehicle</option>
-                <option value="car">Car</option>
-                <option value="motorcycle">Motorcycle</option>
-                <option value="van">Van</option>
+                {vehicleTypes.map((type) => (
+                  <option key={type.id} value={type.id}>{type.name}</option>
+                ))}
               </select>
             </div>
 
@@ -80,6 +124,7 @@ const Header = () => {
               <label className="block mb-2 text-sm font-semibold">Reservation Date</label>
               <input
                 type="date"
+                min={todayDate}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
@@ -95,6 +140,7 @@ const Header = () => {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required
+                min={isToday ? currentTime : undefined}
                 className="w-full px-4 py-2 rounded bg-white/80 text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
               />
             </div>

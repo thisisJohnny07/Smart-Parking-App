@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class Location(models.Model):
     name = models.CharField(max_length=100)
@@ -47,6 +48,7 @@ class Reservation(models.Model):
     vehicle_type = models.ForeignKey(VehicleType, on_delete=models.CASCADE)
     date = models.DateField()
     time = models.TimeField()
+    duration_hours = models.PositiveIntegerField(default=1)
 
     # Vehicle details
     plate_number = models.CharField(max_length=20)
@@ -58,5 +60,22 @@ class Reservation(models.Model):
     mode_of_payment = models.CharField(max_length=50)  # e.g. "cash", "gcash", etc.
     is_paid = models.BooleanField(default=False)
 
+    is_cancelled = models.BooleanField(default=False)
+    has_arrived = models.BooleanField(default=False)
+    has_exited = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
     def __str__(self):
         return f"{self.location.name} - {self.slot_type.name} - {self.vehicle_type.name} - {self.date} {self.time} - Plate: {self.plate_number}"
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification for {self.user.username} - Read: {self.is_read}"

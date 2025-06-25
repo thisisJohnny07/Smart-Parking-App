@@ -8,6 +8,8 @@ import {
   FaBars,
   FaTimes,
 } from 'react-icons/fa'
+import useAuth from '../../hooks/useAuth'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Dashboard from './dashboard'
 import Users from './users'
 import ManageParking from './manageParking'
@@ -21,7 +23,15 @@ const menuItems = [
 ]
 
 const Sidebar = () => {
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  // Parse tab from URL query params, fallback to dashboard
+  const searchParams = new URLSearchParams(location.search)
+  const initialTab = searchParams.get('tab') || 'dashboard'
+
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   useEffect(() => {
@@ -32,9 +42,13 @@ const Sidebar = () => {
     }
   }, [isSidebarOpen])
 
-  const handleLogout = () => {
-    // Replace with actual logout logic (e.g., Firebase signOut, token removal, redirect, etc.)
-    console.log('Logout clicked')
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/admin/sign-in') // Redirect after logout
+    } catch (err) {
+      console.error('Logout failed:', err)
+    }
   }
 
   const renderContent = () => {
@@ -54,6 +68,7 @@ const Sidebar = () => {
 
   return (
     <div className="flex h-screen overflow-hidden">
+      {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 bg-gray-900 text-white flex items-center justify-between px-4 py-3 z-50">
         <div className="flex items-center">
           <FaCar className="text-2xl mr-2" />
@@ -68,6 +83,7 @@ const Sidebar = () => {
         </button>
       </div>
 
+      {/* Mobile overlay */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -76,6 +92,7 @@ const Sidebar = () => {
         />
       )}
 
+      {/* Sidebar */}
       <aside
         className={`
           fixed top-0 left-0 h-full w-64 bg-gray-900 text-white z-40 transform
@@ -111,11 +128,15 @@ const Sidebar = () => {
             onClick={handleLogout}
             className="w-full text-left flex items-center px-6 py-3 hover:bg-gray-800 transition"
           >
-            <span className="mr-3 text-lg"><FaSignOutAlt /></span> Logout
+            <span className="mr-3 text-lg">
+              <FaSignOutAlt />
+            </span>{' '}
+            Logout
           </button>
         </nav>
       </aside>
 
+      {/* Main content */}
       <main className="flex-1 overflow-y-auto bg-gray-100 mt-14 md:mt-0">
         {renderContent()}
       </main>
