@@ -1,5 +1,6 @@
 import axiosInstance from './axiosInstance'
 
+// Initiate an online payment with given payload
 export const initiateOnlinePayment = async (payload) => {
   try {
     const response = await axiosInstance.post('/online-payments/', payload)

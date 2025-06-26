@@ -1,5 +1,6 @@
 import axiosInstance from './axiosInstance'
 
+// Fetch and format user list
 export const getUsers = async () => {
   try {
     const response = await axiosInstance.get('/users/')
@@ -17,6 +18,7 @@ export const getUsers = async () => {
   }
 }
 
+// Deactivate a user by ID
 export const deactivateUser = async (id) => {
   try {
     await axiosInstance.post('/admin/deactivate-user/', { user_id: id })
@@ -26,6 +28,7 @@ export const deactivateUser = async (id) => {
   }
 }
 
+// Activate a user by ID
 export const activateUser = async (id) => {
   try {
     await axiosInstance.post('/admin/activate-user/', { user_id: id })

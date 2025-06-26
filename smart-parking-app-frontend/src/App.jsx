@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import RequireSuperAdmin from './components/RequireSuperAdmin'
+import RequireAuthUser from './components/RequireAuthUser'
 import Home from './pages/user/home.jsx';
 import SignIn from './pages/user/signIn.jsx';
 import SignUp from './pages/user/signUp.jsx';
@@ -22,12 +23,38 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/book-parking" element={<BookParking />} />
-        <Route path="/reservations" element={<Reservations />} />
+
         <Route path="/payment-callback" element={<PaymentCallback />} />
-        <Route path="/profile" element={<Profile />} />
+
         <Route path="/locations" element={<Location />} />
         <Route path="/pricing" element={<Pricing />} />
+        
+
+<Route
+  path="/profile"
+  element={
+    <RequireAuthUser>
+      <Profile />
+    </RequireAuthUser>
+  }
+/>
+<Route
+  path="/book-parking"
+  element={
+    <RequireAuthUser>
+      <BookParking />
+    </RequireAuthUser>
+  }
+/>
+<Route
+  path="/reservations"
+  element={
+    <RequireAuthUser>
+      <Reservations />
+    </RequireAuthUser>
+  }
+/>
+
 
         {/* Admin routes */}
         <Route path="/admin/sign-in" element={<AdminSignIN />} />

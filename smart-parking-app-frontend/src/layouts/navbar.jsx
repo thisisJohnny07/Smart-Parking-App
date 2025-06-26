@@ -9,13 +9,19 @@ import {
 } from '../services/notificationService'
 
 const Navbar = () => {
+  // Menu and dropdown states
   const [menuOpen, setMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+
+  // Notification states
   const [notifCount, setNotifCount] = useState(0)
   const [notifications, setNotifications] = useState([])
+
+  // Authentication hook
   const { user, logout } = useAuth()
 
+  // Fetch the count of unread notifications on load (only for regular users)
   useEffect(() => {
     const loadCount = async () => {
       if (user && !user.is_superuser) {
@@ -30,11 +36,13 @@ const Navbar = () => {
     loadCount()
   }, [user])
 
+  // Handle logout and redirect
   const handleLogout = async () => {
     await logout()
-    window.location.href = '/'
+    window.location.href = '/' // Force reload to landing page
   }
 
+  // Toggle notifications dropdown and load unread notifications
   const handleNotificationClick = async () => {
     try {
       if (!notifOpen) {
@@ -47,6 +55,7 @@ const Navbar = () => {
     }
   }
 
+  // Mark all notifications as read
   const handleMarkAllRead = async () => {
     try {
       await markAllNotificationsRead()
@@ -61,13 +70,16 @@ const Navbar = () => {
   return (
     <nav className="bg-white text-black py-3 px-4 lg:px-30 shadow-md">
       <div className="flex items-center justify-between">
+        {/* Logo section */}
         <Link to="/" className="flex items-center">
           <FaCar className="text-gray-900 text-2xl mr-2" />
           <h1 className="text-xl font-bold uppercase text-gray-900">SmartSpot</h1>
         </Link>
 
+        {/* Spacer */}
         <div className="flex-grow" />
 
+        {/* Desktop navigation links */}
         <div className="hidden lg:flex space-x-6">
           <Link to="/" className="hover:text-gray-900">Home</Link>
           {user && !user.is_superuser && (
@@ -77,11 +89,14 @@ const Navbar = () => {
           <Link to="/locations" className="hover:text-gray-900">Locations</Link>
         </div>
 
+        {/* Right-side icons and profile */}
         <div className="flex items-center ml-10 relative gap-4">
+          {/* Notification bell for regular users */}
           {user && !user.is_superuser && (
             <div className="relative">
               <button onClick={handleNotificationClick} className="relative p-2 rounded-full hover:bg-gray-100">
                 <FaBell className="text-xl text-gray-700" />
+                {/* Badge for unread notification count */}
                 {notifCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                     {notifCount}
@@ -89,6 +104,7 @@ const Navbar = () => {
                 )}
               </button>
 
+              {/* Dropdown for notifications */}
               {notifOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden">
                   <div className="flex justify-between items-center px-4 py-2 border-b">
@@ -99,17 +115,21 @@ const Navbar = () => {
                       </button>
                     )}
                   </div>
+
                   <ul className="max-h-80 overflow-y-auto divide-y text-sm">
+                    {/* Display message if no notifications */}
                     {notifications.length === 0 ? (
                       <li className="p-4 text-gray-500 text-center">No notifications</li>
                     ) : (
                       notifications.map((n) => (
-                        <li key={n.id} className="p-4 hover:bg-gray-50">
-                          <p className="text-gray-800 mb-1">{n.message}</p>
-                          <p className="text-xs text-gray-500">
-                            {n.reservation_date} @ {n.reservation_time} — {n.location}
-                          </p>
-                        </li>
+                        <Link to="/reservations" key={n.id}>
+                          <li className="p-4 hover:bg-gray-50">
+                            <p className="text-gray-800 mb-1">{n.message}</p>
+                            <p className="text-xs text-gray-500">
+                              {n.reservation_date} @ {n.reservation_time} — {n.location}
+                            </p>
+                          </li>
+                        </Link>
                       ))
                     )}
                   </ul>
@@ -118,6 +138,7 @@ const Navbar = () => {
             </div>
           )}
 
+          {/* Auth buttons: Sign in OR dropdown with Profile/Logout */}
           {!user || user.is_superuser ? (
             <Link
               to="/sign-in"
@@ -135,6 +156,7 @@ const Navbar = () => {
                 <span className="text-sm font-medium text-gray-700 hidden md:inline">
                   {user.username}
                 </span>
+                {/* Arrow icon */}
                 <svg
                   className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
                   fill="none"
@@ -145,6 +167,7 @@ const Navbar = () => {
                 </svg>
               </button>
 
+              {/* Profile dropdown */}
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg w-44 z-50">
                   <Link
@@ -165,6 +188,7 @@ const Navbar = () => {
             </div>
           )}
 
+          {/* Mobile menu button */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="lg:hidden focus:outline-none"
@@ -176,6 +200,7 @@ const Navbar = () => {
         </div>
       </div>
 
+      {/* Mobile dropdown menu */}
       <div className={`${menuOpen ? 'block' : 'hidden'} lg:hidden mt-4`}>
         <div className="flex flex-col items-center space-y-2 text-center">
           <Link to="/" className="hover:text-gray-900">Home</Link>

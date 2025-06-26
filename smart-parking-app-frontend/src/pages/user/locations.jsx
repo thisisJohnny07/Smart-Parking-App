@@ -12,24 +12,23 @@ const Location = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const data = await getLocations()
+        const data = await getLocations() // Fetch locations from API
         setLocations(data)
       } catch (err) {
-        setError(err.message || 'Failed to load locations')
+        setError(err.message || 'Failed to load locations') // Set error message on failure
       } finally {
-        setLoading(false)
+        setLoading(false) // Stop loading indicator
       }
     }
 
     fetchLocations()
   }, [])
 
-  // Helper: extract unique vehicle types from slot_pricings for a location
+  // Helper: get unique vehicle types from a location's slot pricings
   const getVehicleTypes = (location) => {
     if (!location.slot_pricings) return []
     const vehicles = location.slot_pricings.map(sp => sp.vehicle_type)
-    // get unique vehicle types
-    return [...new Set(vehicles)]
+    return [...new Set(vehicles)] // Remove duplicates
   }
 
   return (
@@ -43,16 +42,16 @@ const Location = () => {
         </h1>
 
         {loading && (
-          <p className="text-center text-gray-500 text-lg">Loading locations...</p>
+          <p className="text-center text-gray-500 text-lg">Loading locations...</p> // Show loading text
         )}
         {error && (
-          <p className="text-center text-red-600 font-semibold text-lg">{error}</p>
+          <p className="text-center text-red-600 font-semibold text-lg">{error}</p> // Show error message
         )}
 
         {!loading && !error && (
           <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {locations.map((loc) => {
-              const vehicleTypes = getVehicleTypes(loc)
+              const vehicleTypes = getVehicleTypes(loc) // Get unique vehicle types
 
               return (
                 <div

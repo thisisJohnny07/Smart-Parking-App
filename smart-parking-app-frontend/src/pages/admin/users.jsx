@@ -3,11 +3,12 @@ import { getUsers, deactivateUser, activateUser } from '../../services/userServi
 
 const Users = () => {
   const [users, setUsers] = useState([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('') 
+  const [loading, setLoading] = useState(true) 
+  const [error, setError] = useState(null) 
 
   useEffect(() => {
+    // Fetch users once on mount
     const fetch = async () => {
       try {
         const data = await getUsers()
@@ -22,6 +23,7 @@ const Users = () => {
     fetch()
   }, [])
 
+  // Filter users based on search term, memoized for performance
   const filteredUsers = useMemo(() => {
     const lowerSearch = searchTerm.toLowerCase()
     return users.filter(
@@ -32,6 +34,7 @@ const Users = () => {
     )
   }, [users, searchTerm])
 
+  // Toggle user active status (activate or deactivate)
   const toggleActive = async (id, isActive) => {
     try {
       if (isActive) {
@@ -39,7 +42,7 @@ const Users = () => {
       } else {
         await activateUser(id)
       }
-
+      // Update user state locally on success
       setUsers((prev) =>
         prev.map((user) =>
           user.id === id ? { ...user, isActive: !isActive } : user
@@ -54,6 +57,7 @@ const Users = () => {
     <div className="min-h-screen bg-gray-100 p-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Manage Users</h1>
 
+      {/* Search input */}
       <input
         type="text"
         placeholder="Search users by name, email, or username..."
@@ -62,6 +66,7 @@ const Users = () => {
         className="mb-6 w-full px-4 py-2 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600"
       />
 
+      {/* Loading, error, or table */}
       {loading ? (
         <div className="text-center text-gray-600">Loading users...</div>
       ) : error ? (
@@ -71,6 +76,7 @@ const Users = () => {
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-300">
               <tr>
+                {/* Table headers */}
                 <th className="px-4 py-3 font-semibold text-gray-700">Full Name</th>
                 <th className="px-4 py-3 font-semibold text-gray-700">Username</th>
                 <th className="px-4 py-3 font-semibold text-gray-700">Email</th>
@@ -79,6 +85,7 @@ const Users = () => {
               </tr>
             </thead>
             <tbody>
+              {/* Show message if no users match search */}
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
@@ -92,6 +99,7 @@ const Users = () => {
                     <td className="px-4 py-3">{user.username}</td>
                     <td className="px-4 py-3">{user.email}</td>
                     <td className="px-4 py-3">
+                      {/* Display active or inactive status */}
                       {user.isActive ? (
                         <span className="text-green-600 font-semibold">Active</span>
                       ) : (
@@ -99,6 +107,7 @@ const Users = () => {
                       )}
                     </td>
                     <td className="px-4 py-3">
+                      {/* Toggle button changes label and color */}
                       <button
                         onClick={() => toggleActive(user.id, user.isActive)}
                         className={`px-4 py-2 rounded font-semibold ${

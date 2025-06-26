@@ -12,12 +12,12 @@ const Pricing = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getLocations()
+        const data = await getLocations() // Fetch locations and pricing data
         setLocations(data)
       } catch (err) {
-        setError(err.message || 'Failed to fetch pricing')
+        setError(err.message || 'Failed to fetch pricing') // Handle errors
       } finally {
-        setLoading(false)
+        setLoading(false) // Stop loading indicator
       }
     }
 
@@ -37,8 +37,8 @@ const Pricing = () => {
           Choose the right slot based on your vehicle and comfort.
         </p>
 
-        {loading && <p className="text-center text-gray-500">Loading pricing...</p>}
-        {error && <p className="text-center text-red-600 font-semibold">{error}</p>}
+        {loading && <p className="text-center text-gray-500">Loading pricing...</p>} {/* Show loading */}
+        {error && <p className="text-center text-red-600 font-semibold">{error}</p>} {/* Show error */}
 
         {!loading &&
           !error &&
@@ -47,6 +47,7 @@ const Pricing = () => {
               <h2 className="text-2xl font-bold text-gray-800 mb-1">{loc.name}</h2>
               <p className="text-gray-500 mb-6">{loc.address}</p>
 
+              {/* Display pricing cards for each slot */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loc.slot_pricings.map((pricing, idx) => (
                   <div
@@ -61,7 +62,7 @@ const Pricing = () => {
                     </p>
 
                     <div className="text-2xl font-semibold text-grap-900 mt-3 tracking-wide">
-                      ₱{parseFloat(pricing.rate_per_hour).toFixed(2)}
+                      ₱{parseFloat(pricing.rate_per_hour).toFixed(2)} {/* Format rate */}
                       <span className="text-sm font-normal text-gray-500 ml-1">/ hour</span>
                     </div>
                   </div>

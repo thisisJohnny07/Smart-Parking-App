@@ -16,6 +16,7 @@ const BookParking = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
+    // Redirect to homepage if required booking info is missing
     if (
       !passedState ||
       !passedState.locationId ||
@@ -29,8 +30,10 @@ const BookParking = () => {
     }
   }, [passedState, navigate])
 
+  // Step state for booking wizard (starts at step 2)
   const [currentStep, setCurrentStep] = useState(2)
 
+  // Initialize booking parameters from passed state
   const [locationId] = useState(passedState.locationId || '')
   const [locationLabel] = useState(passedState.locationLabel || '')
   const [vehicleTypeId] = useState(passedState.vehicleTypeId || '')
@@ -38,8 +41,10 @@ const BookParking = () => {
   const [date] = useState(passedState.date || '')
   const [time] = useState(passedState.time || '')
 
+  // Selected parking slot info
   const [selectedSlot, setSelectedSlot] = useState(null)
 
+  // Vehicle info entered by user
   const [vehicleInfo, setVehicleInfo] = useState({
     plateNumber: '',
     vehicleMake: '',
@@ -48,14 +53,17 @@ const BookParking = () => {
     hours: 1
   })
 
+  // Move to next step if not last
   const nextStep = () => {
     if (currentStep < 5) setCurrentStep(prev => prev + 1)
   }
 
+  // Move to previous step if not first
   const prevStep = () => {
     if (currentStep > 2) setCurrentStep(prev => prev - 1)
   }
 
+  // Disable Next button based on validation per step
   const isNextDisabled = () => {
     if (currentStep === 2) return selectedSlot === null
     if (currentStep === 3) {
@@ -68,6 +76,7 @@ const BookParking = () => {
     return false
   }
 
+  // Render current step component
   const renderStepContent = () => {
     switch (currentStep) {
       case 2:
@@ -103,7 +112,7 @@ const BookParking = () => {
             date={date}
             time={time}
             vehicleInfo={vehicleInfo}
-            totalAmount={vehicleInfo.hours * selectedSlot?.price || 0}
+            totalAmount={vehicleInfo.hours * selectedSlot?.price || 0} // Calculate total payment
           />
         )
       default:
@@ -126,7 +135,7 @@ const BookParking = () => {
           <button
             onClick={prevStep}
             className="px-4 py-2 bg-gray-300 text-black rounded disabled:opacity-50"
-            disabled={currentStep === 2}
+            disabled={currentStep === 2} // Disable Prev on first step
           >
             Previous
           </button>
@@ -135,7 +144,7 @@ const BookParking = () => {
             <button
               onClick={nextStep}
               className="px-4 py-2 bg-gray-900 text-white rounded disabled:opacity-50"
-              disabled={isNextDisabled()}
+              disabled={isNextDisabled()} // Disable Next based on validation
             >
               Next
             </button>

@@ -8,6 +8,7 @@ import PrimaryButton from '../../components/primaryButton'
 import useAuth from '../../hooks/useAuth'
 
 const SignUp = () => {
+  // Form state for user input fields
   const [form, setForm] = useState({
     username: '',
     password: '',
@@ -17,18 +18,22 @@ const SignUp = () => {
     last_name: '',
   })
 
+  // Error state for each field + submission error
   const [errors, setErrors] = useState({})
   const [submitError, setSubmitError] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-  const { register } = useAuth()
 
+  const navigate = useNavigate()
+  const { register } = useAuth() // Custom auth hook to call register API
+
+  // Handle input field changes
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-    setErrors((prev) => ({ ...prev, [e.target.name]: '' })) // clear field error on change
-    setSubmitError('')
+    setErrors((prev) => ({ ...prev, [e.target.name]: '' })) // Clear error on field update
+    setSubmitError('') // Reset submission error
   }
 
+  // Validate form before submission
   const validate = () => {
     const newErrors = {}
 
@@ -45,6 +50,7 @@ const SignUp = () => {
     return newErrors
   }
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
     const validationErrors = validate()
@@ -56,7 +62,6 @@ const SignUp = () => {
     setLoading(true)
     setSubmitError('')
 
-    // Prepare payload matching backend expected keys
     const payload = {
       username: form.username,
       password: form.password,
@@ -67,14 +72,11 @@ const SignUp = () => {
 
     try {
       await register(payload)
-      // On success, navigate to sign-in or show success message
-      navigate('/sign-in')
+      navigate('/sign-in') // Redirect on successful registration
     } catch (error) {
-      // Handle API errors
+      // Handle backend validation or generic errors
       if (error.response?.data) {
-        // If backend sends validation errors as an object
         const apiErrors = error.response.data
-        // Map backend errors to your form error state if possible
         const newErrors = {}
         for (const key in apiErrors) {
           newErrors[key] = Array.isArray(apiErrors[key]) ? apiErrors[key].join(' ') : apiErrors[key]
@@ -93,10 +95,14 @@ const SignUp = () => {
       <TopBar />
       <Navbar />
 
+      {/* Sign Up Form Container */}
       <div className="flex-grow flex items-center justify-center px-4 my-16">
         <div className="bg-white bg-opacity-80 rounded-lg shadow-lg max-w-2xl w-full p-8">
           <h2 className="text-2xl font-semibold mb-6 text-center">Sign Up</h2>
+
+          {/* Form */}
           <form className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4" onSubmit={handleSubmit} noValidate>
+            {/* Username */}
             <div>
               <FormInput
                 id="username"
@@ -111,6 +117,7 @@ const SignUp = () => {
               {errors.username && <p className="text-red-600 text-sm mt-1">{errors.username}</p>}
             </div>
 
+            {/* Email */}
             <div>
               <FormInput
                 id="email"
@@ -125,6 +132,7 @@ const SignUp = () => {
               {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
             </div>
 
+            {/* First Name */}
             <div>
               <FormInput
                 id="first_name"
@@ -139,6 +147,7 @@ const SignUp = () => {
               {errors.first_name && <p className="text-red-600 text-sm mt-1">{errors.first_name}</p>}
             </div>
 
+            {/* Last Name */}
             <div>
               <FormInput
                 id="last_name"
@@ -153,6 +162,7 @@ const SignUp = () => {
               {errors.last_name && <p className="text-red-600 text-sm mt-1">{errors.last_name}</p>}
             </div>
 
+            {/* Password */}
             <div>
               <FormInput
                 id="password"
@@ -167,6 +177,7 @@ const SignUp = () => {
               {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
             </div>
 
+            {/* Confirm Password */}
             <div>
               <FormInput
                 id="confirmPassword"
@@ -181,6 +192,7 @@ const SignUp = () => {
               {errors.confirmPassword && <p className="text-red-600 text-sm mt-1">{errors.confirmPassword}</p>}
             </div>
 
+            {/* Submission */}
             <div className="md:col-span-2">
               {submitError && <p className="text-red-600 mb-2 text-center">{submitError}</p>}
               <PrimaryButton type="submit" className="w-full" disabled={loading}>
@@ -189,6 +201,7 @@ const SignUp = () => {
             </div>
           </form>
 
+          {/* Redirect to Sign In */}
           <p className="mt-6 text-center text-gray-700 md:col-span-2">
             Already have an account?{' '}
             <a href="/sign-in" className="text-blue-600 hover:underline">

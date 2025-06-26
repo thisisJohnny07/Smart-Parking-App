@@ -4,9 +4,9 @@ import { login as loginService, logout as logoutService, register as registerSer
 export const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [tokens, setTokens] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)       // Current logged-in user
+  const [tokens, setTokens] = useState(null)   // JWT access and refresh tokens
+  const [loading, setLoading] = useState(true) // Loading state during initial auth check
 
   useEffect(() => {
     const stored = localStorage.getItem('auth')
@@ -17,27 +17,34 @@ export const AuthProvider = ({ children }) => {
         setTokens({ access, refresh })
       } catch (err) {
         console.error('Failed to restore auth:', err)
-        logout() // clear corrupted storage
+        logout() // Clear corrupted auth data
       }
     }
     setLoading(false)
   }, [])
 
+  // Login handler
   const login = async (username, password, options = {}) => {
     const data = await loginService(username, password)
 
-    // Block superuser login if this is a public user login page
+    // Prevent superuser login if restricted
     if (data.user?.is_superuser && options.restrictSuperuser) {
       throw new Error('Admins are not allowed to sign in here.')
     }
 
-    localStorage.setItem('auth', JSON.stringify({ access: data.access, refresh: data.refresh, user: data.user }))
+    localStorage.setItem('auth', JSON.stringify({
+      access: data.access,
+      refresh: data.refresh,
+      user: data.user
+    }))
+
     setUser(data.user)
     setTokens({ access: data.access, refresh: data.refresh })
 
     return data.user
   }
 
+  // Logout handler
   const logout = async () => {
     try {
       const stored = localStorage.getItem('auth')
@@ -54,6 +61,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('auth')
   }
 
+  // Register handler
   const register = async (userData) => {
     const user = await registerService(userData)
     return user

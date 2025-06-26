@@ -4,28 +4,28 @@ import { createReservation } from '../../services/reservationService'
 
 const PaymentCallback = () => {
   const navigate = useNavigate()
-  const hasRun = useRef(false)
+  const hasRun = useRef(false) // Prevent multiple effect runs
 
   useEffect(() => {
     if (hasRun.current) return
     hasRun.current = true
 
-    const cached = sessionStorage.getItem('pendingReservation')
+    const cached = sessionStorage.getItem('pendingReservation') // Retrieve saved reservation data
     if (cached) {
       const reservationData = JSON.parse(cached)
-      createReservation(reservationData)
+      createReservation(reservationData) // Create reservation after payment success
         .then(() => {
-          sessionStorage.removeItem('pendingReservation')
+          sessionStorage.removeItem('pendingReservation') // Clear cache on success
           alert('✅ Payment successful and reservation saved!')
         })
         .catch(() => {
           alert('❌ Payment succeeded but reservation failed to save.')
         })
         .finally(() => {
-          navigate('/reservations')
+          navigate('/reservations') // Redirect to reservations page
         })
     } else {
-      navigate('/reservations') // fallback if no data
+      navigate('/reservations') // Redirect if no cached data found
     }
   }, [])
 

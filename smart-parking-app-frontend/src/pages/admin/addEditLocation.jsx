@@ -2,52 +2,60 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import FormInput from '../../components/formInput'
 import PrimaryButton from '../../components/primaryButton'
-// Adjust imports as needed for your project
 import { getLocations, createLocation, updateLocation } from '../../services/locationService'
-import { ArrowLeft } from 'lucide-react' // If you don't have this, replace with any icon or button
+import { ArrowLeft } from 'lucide-react'
 
+// Predefined list of vehicle types
 const vehicleTypes = [
   { id: 1, name: 'Car' },
   { id: 2, name: 'Motorcycle' },
   { id: 3, name: 'Van' },
 ]
 
+// Predefined list of slot types
 const slotTypes = [
   { id: 1, name: 'Standard Slot' },
   { id: 2, name: 'Covered Slot' },
   { id: 3, name: 'Premium Slot' },
 ]
 
+// Helper function to get vehicle type ID by name
 const getVehicleTypeId = (name) => {
   const v = vehicleTypes.find((v) => v.name === name)
   return v ? v.id : null
 }
 
+// Helper function to get slot type ID by name
 const getSlotTypeId = (name) => {
   const s = slotTypes.find((s) => s.name === name)
   return s ? s.id : null
 }
 
 const AddEditLocation = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id } = useParams() // Read location ID from route params
+  const navigate = useNavigate() // Navigation hook
 
+  // Form state
   const [form, setForm] = useState({
     name: '',
     address: '',
-    slot_pricings: [],
+    slot_pricings: [], // Nested array for different pricing combinations
   })
+
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
+  // On component mount or when ID changes
   useEffect(() => {
     if (id) {
+      // If editing an existing location, fetch details
       const fetchLocation = async () => {
         try {
           const locations = await getLocations()
           const existing = locations.find((loc) => String(loc.id) === id)
+
           if (existing) {
-            // Map string vehicle_type and slot_type names to their IDs for the form state
+            // Normalize string-based vehicle_type and slot_type into IDs
             const normalizedSlots = existing.slot_pricings.map((s) => ({
               vehicle_type_id: getVehicleTypeId(s.vehicle_type),
               slot_type_id: getSlotTypeId(s.slot_type),
@@ -70,7 +78,7 @@ const AddEditLocation = () => {
       }
       fetchLocation()
     } else {
-      // New location: initialize all vehicle-type + slot-type combinations with empty values
+      // New location: generate empty pricing fields for all combinations
       const defaultSlots = []
       vehicleTypes.forEach((vehicle) => {
         slotTypes.forEach((slot) => {
@@ -86,11 +94,13 @@ const AddEditLocation = () => {
     }
   }, [id])
 
+  // Handle input field changes for name and address
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
+  // Handle input changes for nested pricing data
   const handleSlotChange = (index, key, value) => {
     setForm((prev) => {
       const updated = [...prev.slot_pricings]
@@ -99,6 +109,7 @@ const AddEditLocation = () => {
     })
   }
 
+  // Submit form handler
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -106,11 +117,13 @@ const AddEditLocation = () => {
 
     try {
       if (id) {
+        // Update mode
         await updateLocation(id, form)
       } else {
+        // Create mode
         await createLocation(form)
       }
-      navigate('/admin/home?tab=manage-parking')
+      navigate('/admin/home?tab=manage-parking') // Go back after success
     } catch (err) {
       console.error(err)
       setError('Failed to save location. Please try again.')
@@ -121,6 +134,7 @@ const AddEditLocation = () => {
 
   return (
     <div className="min-h-screen bg-white p-6 max-w-3xl mx-auto font-sans text-gray-900">
+      {/* Header with back button */}
       <div className="flex items-center gap-4 mb-6">
         <ArrowLeft
           className="cursor-pointer"
@@ -131,9 +145,11 @@ const AddEditLocation = () => {
         <h1 className="text-2xl font-semibold">{id ? 'Edit Location' : 'Add New Location'}</h1>
       </div>
 
+      {/* Error message display */}
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Location name */}
         <FormInput
           id="name"
           name="name"
@@ -142,6 +158,8 @@ const AddEditLocation = () => {
           value={form.name}
           onChange={handleChange}
         />
+
+        {/* Address */}
         <FormInput
           id="address"
           name="address"
@@ -151,11 +169,16 @@ const AddEditLocation = () => {
           onChange={handleChange}
         />
 
+        {/* Slot pricing section */}
         <div className="mt-6">
           <h2 className="text-lg font-semibold mb-2">Slot Pricing</h2>
+
+          {/* Loop over each vehicle type */}
           {vehicleTypes.map((vehicle) => (
             <div key={vehicle.id} className="mb-6">
               <p className="font-medium text-gray-800 mb-2">{vehicle.name}</p>
+
+              {/* Loop over each slot type for that vehicle */}
               {slotTypes.map((slot) => {
                 const index = form.slot_pricings.findIndex(
                   (s) => s.vehicle_type_id === vehicle.id && s.slot_type_id === slot.id
@@ -164,11 +187,15 @@ const AddEditLocation = () => {
                   rate_per_hour: '',
                   available_slots: '',
                 }
+
                 return (
                   <div key={slot.id} className="grid grid-cols-3 gap-4 mb-2">
+                    {/* Slot label */}
                     <div className="col-span-1 flex items-center text-sm text-gray-700">
                       {slot.name}
                     </div>
+
+                    {/* Input for rate per hour */}
                     <FormInput
                       id={`rate-${vehicle.id}-${slot.id}`}
                       type="number"
@@ -176,6 +203,8 @@ const AddEditLocation = () => {
                       value={slotData.rate_per_hour}
                       onChange={(e) => handleSlotChange(index, 'rate_per_hour', e.target.value)}
                     />
+
+                    {/* Input for available slots */}
                     <FormInput
                       id={`available-${vehicle.id}-${slot.id}`}
                       type="number"
@@ -190,6 +219,7 @@ const AddEditLocation = () => {
           ))}
         </div>
 
+        {/* Submit button */}
         <PrimaryButton type="submit">
           {loading ? 'Saving...' : id ? 'Update Location' : 'Add Location'}
         </PrimaryButton>

@@ -17,12 +17,12 @@ const Profile = () => {
   useEffect(() => {
     const getProfile = async () => {
       try {
-        const data = await fetchUserProfile()
+        const data = await fetchUserProfile() // Fetch user profile from API
         setProfile(data)
       } catch (err) {
-        setError(err.message || 'Failed to fetch profile')
+        setError(err.message || 'Failed to fetch profile') // Handle fetch error
       } finally {
-        setLoading(false)
+        setLoading(false) // Stop loading indicator
       }
     }
     getProfile()
@@ -30,20 +30,20 @@ const Profile = () => {
 
   const handleUpdate = async (updatedFields) => {
     try {
-      setLoading(true)
+      setLoading(true) // Show loading while updating
       const payload = {
         first_name: updatedFields.first_name,
         last_name: updatedFields.last_name,
         username: updatedFields.username
       }
-      await updateUserProfile(payload)
-      const refreshedProfile = await fetchUserProfile()
+      await updateUserProfile(payload) // Send update request
+      const refreshedProfile = await fetchUserProfile() // Refetch updated profile
       setProfile(refreshedProfile)
-      setEditOpen(false)
+      setEditOpen(false) // Close edit modal on success
     } catch {
-      alert('Failed to update profile.')
+      alert('Failed to update profile.') // Alert on failure
     } finally {
-      setLoading(false)
+      setLoading(false) // Stop loading indicator
     }
   }
 
@@ -51,21 +51,22 @@ const Profile = () => {
     <>
       <TopBar />
       <Navbar />
-      {/* Remove min-h-screen, just use padding top and bottom */}
+      {/* Main container with padding, gradient background */}
       <div className="bg-gradient-to-b from-gray-100 to-white flex flex-col items-center justify-start px-4 pt-6 pb-6 min-w-full">
         <div className="bg-white shadow-2xl rounded-2xl p-6 w-full max-w-md relative">
           <div className="flex flex-col items-center mb-6">
-            <FaUserCircle className="text-gray-300 text-6xl mb-3" />
+            <FaUserCircle className="text-gray-300 text-6xl mb-3" /> {/* User icon */}
             <h2 className="text-2xl font-bold text-gray-800 text-center">User Profile</h2>
             <p className="text-xs text-gray-500 mt-1">Manage your account information</p>
           </div>
 
           {loading ? (
-            <p className="text-center text-gray-500">Loading...</p>
+            <p className="text-center text-gray-500">Loading...</p> // Loading indicator
           ) : error ? (
-            <p className="text-center text-red-500">{error}</p>
+            <p className="text-center text-red-500">{error}</p> // Error message
           ) : (
             <>
+              {/* Display user info */}
               <div className="space-y-4 text-gray-800">
                 <div>
                   <p className="text-xs text-gray-500 uppercase font-medium">Full Name</p>
@@ -81,6 +82,7 @@ const Profile = () => {
                 </div>
               </div>
 
+              {/* Action buttons */}
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setEditOpen(true)}
@@ -101,6 +103,7 @@ const Profile = () => {
       </div>
       <Footer />
 
+      {/* Modals for editing profile and changing password */}
       <EditProfileModal
         isOpen={editOpen}
         onClose={() => setEditOpen(false)}

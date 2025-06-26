@@ -10,6 +10,7 @@ const Home = () => {
       <TopBar />
       <Navbar />
       <Header />
+      
       {/* Advertisement section */}
       <div className="text-center mt-10">
         <h2 className="text-2xl font-semibold text-gray-900">Looking for a Spot?</h2>
@@ -19,7 +20,7 @@ const Home = () => {
         </button>
       </div>
 
-      {/* Map section */}
+      {/* Embedded Google Map showing parking location */}
       <div className="mt-10 mb-10 w-full flex justify-center">
         <iframe
           title="Parking Map"
@@ -33,6 +34,7 @@ const Home = () => {
           className="rounded-md shadow-lg"
         ></iframe>
       </div>
+
       {/* Footer section */}
       <Footer />
     </>

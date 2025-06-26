@@ -2,19 +2,23 @@ import React, { useState, useEffect } from 'react'
 import bgImage from '../assets/bg.jpg'
 import { useNavigate } from 'react-router-dom'
 import { fetchLocationsAndVehicles } from '../services/locationService'
-import useAuth from '../hooks/useAuth' // Add this
+import useAuth from '../hooks/useAuth'
 
 const Header = () => {
+  // State for user input
   const [vehicleType, setVehicleType] = useState(null)
   const [location, setLocation] = useState(null)
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
+
+  // Store dropdown data for select inputs
   const [locations, setLocations] = useState([])
   const [vehicleTypes, setVehicleTypes] = useState([])
-  const { user } = useAuth()
 
+  const { user } = useAuth()
   const navigate = useNavigate()
 
+  // Set today's date on mount and fetch dropdown data
   useEffect(() => {
     const now = new Date()
     const today = now.toISOString().split('T')[0]
@@ -26,26 +30,30 @@ const Header = () => {
     })
   }, [])
 
+  // Compute if selected date is today
   const now = new Date()
   const todayDate = now.toISOString().split('T')[0]
   const currentTime = now.toTimeString().slice(0, 5)
   const isToday = date === todayDate
 
+  // If date is today and time is in the past, clear it
   useEffect(() => {
     if (isToday && time && time <= currentTime) {
       setTime('')
     }
-  }, [date])
+  }, [date]) // triggered when date changes
 
+  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    // Make sure only regular users can book
+    // If no user or admin is trying to book, redirect to login
     if (!user || user.is_superuser) {
       navigate('/sign-in')
       return
     }
 
+    // Navigate to booking page with form state
     navigate('/book-parking', {
       state: {
         locationId: location.id,
@@ -63,6 +71,7 @@ const Header = () => {
       className="relative bg-cover bg-center bg-no-repeat text-white min-h-[600px]"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
+      {/* Dark overlay */}
       <div
         className="absolute inset-0 z-10"
         style={{ backgroundColor: 'rgba(17, 24, 39, 0.83)' }}
@@ -74,12 +83,13 @@ const Header = () => {
           Reserve your space ahead of time and avoid the hassle.
         </p>
 
+        {/* Booking Form */}
         <form
           onSubmit={handleSubmit}
           className="backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-8 md:p-10 text-white shadow-xl"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Location */}
+            {/* Location Dropdown */}
             <div className="text-left">
               <label className="block mb-2 text-sm font-semibold">Select Location</label>
               <select
@@ -99,7 +109,7 @@ const Header = () => {
               </select>
             </div>
 
-            {/* Vehicle Type */}
+            {/* Vehicle Type Dropdown */}
             <div className="text-left">
               <label className="block mb-2 text-sm font-semibold">Vehicle Type</label>
               <select
@@ -119,12 +129,12 @@ const Header = () => {
               </select>
             </div>
 
-            {/* Date */}
+            {/* Reservation Date */}
             <div className="text-left">
               <label className="block mb-2 text-sm font-semibold">Reservation Date</label>
               <input
                 type="date"
-                min={todayDate}
+                min={todayDate} // This restricts selecting past dates
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 required
@@ -132,7 +142,7 @@ const Header = () => {
               />
             </div>
 
-            {/* Time */}
+            {/* Reservation Time */}
             <div className="text-left">
               <label className="block mb-2 text-sm font-semibold">Reservation Time</label>
               <input
@@ -140,12 +150,13 @@ const Header = () => {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 required
-                min={isToday ? currentTime : undefined}
+                min={isToday ? currentTime : undefined} // Disable past times if today
                 className="w-full px-4 py-2 rounded bg-white/80 text-black focus:outline-none focus:ring-2 focus:ring-gray-900"
               />
             </div>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             className="w-full md:w-1/2 bg-gray-900 hover:bg-blue-700 text-white font-semibold py-3 rounded transition"

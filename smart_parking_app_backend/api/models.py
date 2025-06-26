@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+# Location Model
 class Location(models.Model):
     name = models.CharField(max_length=100)
     address = models.TextField()
@@ -9,7 +10,7 @@ class Location(models.Model):
     def __str__(self):
         return f"{self.name} - {self.address}"
 
-
+#Slot Type Model
 class SlotType(models.Model):
     SLOT_CHOICES = [
         ('standard', 'Standard'),
@@ -30,7 +31,7 @@ class VehicleType(models.Model):
     def __str__(self):
         return self.name
 
-
+#Slot Pricing Model
 class SlotPricing(models.Model):
     location_id = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='slot_pricings')
     slot_type_id = models.ForeignKey(SlotType, on_delete=models.CASCADE)
@@ -41,6 +42,7 @@ class SlotPricing(models.Model):
     def __str__(self):
         return f"{self.location_id} - {self.slot_type_id} - {self.vehicle_type_id}"
 
+# Reservation Model
 class Reservation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
@@ -70,6 +72,7 @@ class Reservation(models.Model):
     def __str__(self):
         return f"{self.location.name} - {self.slot_type.name} - {self.vehicle_type.name} - {self.date} {self.time} - Plate: {self.plate_number}"
 
+# Notifications Model
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name='notifications')
